@@ -12,7 +12,10 @@ build/
 .ruff_cache/
 node_modules/
 frontend/dist/
+*.tsbuildinfo
 open_paxel/static/assets/
 open_paxel/static/index.html
 .DS_Store
 *.mp4
+# agent/skill planning docs
+tasks/

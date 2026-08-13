@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from pathlib import Path
 
 from open_paxel.models.domain import SessionFacts, UserMessage
@@ -17,7 +16,7 @@ from open_paxel.parser.patterns import (
     TURN_INLINE,
 )
 from open_paxel.text.document_scan import DocumentStats, scan_document
-from open_paxel.text.tokens import chunk_paragraphs, estimate_tokens
+from open_paxel.text.tokens import chunk_paragraphs
 
 USER_ROLES = frozenset({"user", "human", "you"})
 ASSISTANT_ROLES = frozenset({"assistant", "ai", "claude", "model"})

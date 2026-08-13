@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from open_paxel.discover.scanner import RepoInfo
 from open_paxel.models.domain import SessionReport

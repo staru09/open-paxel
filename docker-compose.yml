@@ -1,0 +1,68 @@
+services:
+  app:
+    build: .
+    image: open-paxel
+    # Provider + key (OPENAI_API_KEY / OPENROUTER_API_KEY / provider selection)
+    # come from .env — copy .env.example to .env first.
+    env_file: .env
+    environment:
+      # Container-only: bind all interfaces so the published port is reachable.
+      # The code default stays 127.0.0.1 for local (non-Docker) use.
+      OPEN_PAXEL_HOST: "0.0.0.0"
+      # App data (profile.db, config.toml, incoming/) lives on the named volume.
+      OPEN_PAXEL_HOME: "/data"
+      # When OPEN_PAXEL_LLM_PROVIDER=ollama, talk to the bundled service by
+      # default. This `environment:` value overrides env_file, so a localhost
+      # OPEN_PAXEL_OLLAMA_BASE_URL in .env (correct for non-Docker dev) can't
+      # leak in and break the bundled service. To use a host-installed Ollama
+      # instead, set OPEN_PAXEL_DOCKER_OLLAMA_BASE_URL in .env (e.g.
+      # http://host.docker.internal:11434/v1). Ignored for non-ollama providers.
+      OPEN_PAXEL_OLLAMA_BASE_URL: "${OPEN_PAXEL_DOCKER_OLLAMA_BASE_URL:-http://ollama:11434/v1}"
+    ports:
+      - "3847:3847"
+    volumes:
+      # Host Claude sessions, read-only. Mounted at the container user's
+      # $HOME/.claude (HOME=/home/app) because discovery reads
+      # Path.home()/.claude/projects. (~ is NOT expanded by compose — use ${HOME}.)
+      # On Windows (PowerShell/CMD), $HOME may be unset; fallback to ${USERPROFILE}.
+      - "${HOME:-${USERPROFILE}}/.claude:/home/app/.claude:ro"
+      # Persistent app data — survives `docker compose down`.
+      - "openpaxel-data:/data"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+        required: false
+
+  # Bundled local LLM — only starts with `docker compose --profile ollama up`.
+  ollama:
+    image: ollama/ollama
+    profiles: ["ollama"]
+    volumes:
+      - "ollama-data:/root/.ollama"
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # One-shot: pull the model named by OPEN_PAXEL_MODEL (default llama3.2) into
+  # the ollama volume, then exit. Single source of truth — the app reads the
+  # same OPEN_PAXEL_MODEL. Manual fallback: `docker compose exec ollama ollama pull <model>`.
+  ollama-pull:
+    image: ollama/ollama
+    profiles: ["ollama"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama pull "${OPEN_PAXEL_MODEL:-llama3.2}"
+    restart: "no"
+
+volumes:
+  openpaxel-data:
+  ollama-data:

@@ -32,3 +32,21 @@ def test_env_overrides_toml(tmp_path, monkeypatch):
 
 def test_project_root_has_pyproject():
     assert (project_root() / "pyproject.toml").exists()
+
+
+def test_host_defaults_to_loopback(monkeypatch):
+    monkeypatch.delenv("OPEN_PAXEL_HOST", raising=False)
+    monkeypatch.setattr("open_paxel.config.load_env_files", lambda **_: [])
+
+    settings = Settings.load()
+
+    assert settings.host == "127.0.0.1"
+
+
+def test_host_overridable_via_env(monkeypatch):
+    monkeypatch.setenv("OPEN_PAXEL_HOST", "0.0.0.0")
+    monkeypatch.setattr("open_paxel.config.load_env_files", lambda **_: [])
+
+    settings = Settings.load()
+
+    assert settings.host == "0.0.0.0"

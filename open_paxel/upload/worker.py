@@ -56,7 +56,7 @@ async def run_upload_job(
                 current_step="Starting analysis",
                 current_file=None,
             )
-            log(f"Processing {len(files)} file(s) with model {settings.model}")
+            log(f"Processing {len(files)} file(s) with model {settings.effective_model()}")
 
             sem = asyncio.Semaphore(settings.concurrency)
 

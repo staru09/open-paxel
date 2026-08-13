@@ -1,0 +1,31 @@
+# Build artifacts and caches — rebuilt fresh inside the image
+.venv/
+.pip-test-venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node / frontend build output (frontend is rebuilt in the build stage)
+**/node_modules/
+frontend/dist/
+open_paxel/static/
+
+# Secrets and local data — never copy into the image
+.env
+*.db
+.brain-dump/
+.open-paxel/
+
+# VCS and editor noise
+.git/
+.gitignore
+.DS_Store
+*.mp4
+
+# Repo-local docs/planning not needed at runtime
+tasks/
+SPEC.md

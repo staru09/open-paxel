@@ -82,6 +82,47 @@ Or use the installer scripts (they only run `uv sync --all-groups`):
 ./install.ps1     # Windows PowerShell
 ```
 
+## Run with Docker
+
+Prefer not to install `uv`, Python, and Node? Run the whole thing — frontend build
+included — with one command. You only need Docker.
+
+```bash
+cp .env.example .env     # then edit: set your provider + key (or choose Ollama)
+docker compose up        # → http://localhost:3847
+```
+
+That's it. The image builds the dashboard, serves it, and reads your Claude sessions
+from `~/.claude` (mounted **read-only**), so `discover` and drag-and-drop upload both
+work. Analysis results persist in a named volume across restarts.
+
+### Fully local, no API key (bundled Ollama)
+
+```bash
+# In .env:  OPEN_PAXEL_LLM_PROVIDER=ollama   (OPEN_PAXEL_MODEL picks the model, default llama3.2)
+docker compose --profile ollama up
+```
+
+This also starts a bundled Ollama container and, on first run, pulls the model named by
+`OPEN_PAXEL_MODEL` into a persistent volume — no API key needed. `OPEN_PAXEL_MODEL` is the
+single source of truth: it selects both the model the app uses and the one pulled. To use
+an Ollama already installed on your host instead, set
+`OPEN_PAXEL_DOCKER_OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` in `.env` and skip the profile.
+
+### Lifecycle
+
+```bash
+docker compose up -d        # run in background
+docker compose logs -f      # follow logs
+docker compose down         # stop (data volume preserved)
+docker compose build        # rebuild after code changes
+```
+
+Switching provider (OpenAI ↔ OpenRouter ↔ Ollama) is just a `.env` edit — no rebuild. Keep
+every line in `.env` as strict `KEY=VALUE` or a `# comment`; `docker compose` rejects other
+lines in an env file. The local dev workflow below (`uv run open-paxel dev`, `npm run dev`)
+is unchanged and still binds `127.0.0.1`.
+
 ## Configure API key
 
 **Credential priority** (highest first):

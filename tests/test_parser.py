@@ -14,6 +14,9 @@ def test_decode_project_path():
     assert decode_project_path("c--Users-91745-OneDrive-Desktop-staru09-github-io") == (
         r"C:\Users\91745\OneDrive\Desktop\staru09\github\io"
     )
+    assert decode_project_path("d--Projects-MyRepo") == r"D:\Projects\MyRepo"
+    assert decode_project_path("E--Code-open-paxel") == r"E:\Code\open\paxel"
+
 
 
 def test_parse_sample_jsonl():
