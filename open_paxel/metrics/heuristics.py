@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 
-from open_paxel.models.domain import DIMENSIONS, HeuristicMetrics, SessionFacts
+from open_paxel.models.domain import HeuristicMetrics, SessionFacts
 
 STOPWORDS = {
     "a", "an", "the", "to", "in", "on", "for", "of", "and", "or", "is", "it",
@@ -56,7 +56,6 @@ def compute_heuristics(facts: SessionFacts) -> HeuristicMetrics:
     total_tokens = max(facts.total_tokens, 1)
 
     redirect_rate = facts.redirect_hits / turns
-    steering_rate = redirect_rate
 
     # Token-normalized steering: more redirects per 1k tokens = higher steering
     redirects_per_1k = (facts.redirect_hits / total_tokens) * 1000
@@ -119,7 +118,6 @@ def compute_heuristics(facts: SessionFacts) -> HeuristicMetrics:
         engineering=engineering,
         product_instinct=product,
         planning=planning,
-        steering_rate=steering_rate,
         redirect_rate=redirect_rate,
         plan_mode_used=plan_used,
         avg_prompt_words=avg_words,

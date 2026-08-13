@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -40,13 +41,37 @@ def _normalize_path(path: str) -> str:
     return str(candidate).lower().replace("/", "\\")
 
 
+def _is_windows_path(path: Path | str) -> bool:
+    path_str = str(path)
+    if len(path_str) >= 2 and path_str[0].isalpha() and (path_str[1] == ":" or path_str[1] == "/" or path_str[1] == "\\"):
+        return True
+    return False
+
+
+def _resolve_path(path: Path) -> Path:
+    if os.name != 'nt' and _is_windows_path(path):
+        return path
+    return path.resolve()
+
+
 def _claude_encoded_key(path: Path) -> str:
     """Fingerprint matching Claude's ~/.claude/projects folder names.
 
     Windows drives encode as ``c--users-name``; POSIX roots encode with a
     single leading dash, e.g. ``/Users/surya`` -> ``-Users-surya``.
     """
-    resolved = path.resolve()
+    resolved = _resolve_path(path)
+    path_str = str(resolved)
+    if _is_windows_path(path_str):
+        drive = path_str[0].lower()
+        rest = path_str[2:]
+        if rest.startswith("/") or rest.startswith("\\"):
+            rest = rest[1:]
+        normalized_rest = rest.replace("\\", "/")
+        parts = [p for p in normalized_rest.split("/") if p]
+        segments = [part.replace(" ", "-").replace("_", "-").lower() for part in parts]
+        return f"{drive}--" + "-".join(segments)
+
     parts = list(resolved.parts)
     if not parts:
         return ""
@@ -63,14 +88,30 @@ def _encoded_key_match(repo: RepoInfo, cwd: Path) -> bool:
 
 def _cwd_path_variants(cwd: Path) -> list[str]:
     """Include aliases such as gpu_visuals vs gpu\\visuals."""
-    resolved = cwd.resolve()
+    resolved = _resolve_path(cwd)
     variants = {_normalize_path(str(resolved))}
-    parts = list(resolved.parts)
+    
+    path_str = str(resolved)
+    if _is_windows_path(path_str):
+        rest = path_str
+        normalized = rest.replace("/", "\\")
+        parts = [p for p in normalized.split("\\") if p]
+    else:
+        parts = list(resolved.parts)
+
     if parts:
         leaf = parts[-1]
         if "_" in leaf:
-            alt = Path(*parts[:-1], *leaf.split("_"))
-            variants.add(_normalize_path(str(alt)))
+            if _is_windows_path(path_str):
+                alt_parts = list(parts[:-1]) + leaf.split("_")
+                if alt_parts[0].endswith(":"):
+                    alt_str = alt_parts[0] + "\\" + "\\".join(alt_parts[1:])
+                else:
+                    alt_str = "\\".join(alt_parts)
+                variants.add(_normalize_path(alt_str))
+            else:
+                alt = Path(*parts[:-1], *leaf.split("_"))
+                variants.add(_normalize_path(str(alt)))
     return sorted(variants)
 
 
@@ -141,7 +182,10 @@ def _correct_repo_path(repo: RepoInfo, cwd: Path) -> RepoInfo:
     cwd_str = str(cwd)
     if _normalize_path(repo.path) == _normalize_path(cwd_str):
         return repo
-    return replace(repo, path=cwd_str, name=cwd.name or repo.name)
+    name = cwd.name
+    if "\\" in name:
+        name = name.split("\\")[-1]
+    return replace(repo, path=cwd_str, name=name or repo.name)
 
 
 def discover_repo_for_cwd(cwd: Path | None = None) -> RepoInfo | None:

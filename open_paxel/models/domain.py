@@ -13,6 +13,7 @@ from open_paxel.models.pipeline_models import (
     SessionNarrative,
     SteeringTrace,
 )
+from open_paxel.models.scores import DimensionScore
 
 
 DIMENSIONS = ("steering", "execution", "engineering", "product_instinct", "planning")
@@ -64,7 +65,6 @@ class HeuristicMetrics(BaseModel):
     engineering: float = 0.0
     product_instinct: float = 0.0
     planning: float = 0.0
-    steering_rate: float = 0.0
     redirect_rate: float = 0.0
     plan_mode_used: bool = False
     avg_prompt_words: float = 0.0
@@ -94,9 +94,6 @@ class RedactedExcerpt(BaseModel):
     accumulated_summary: str = ""
     chunk_count: int = 0
     metrics_json: dict[str, Any] = Field(default_factory=dict)
-
-
-from open_paxel.models.scores import DimensionScore
 
 
 class SessionScore(BaseModel):

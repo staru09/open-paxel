@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from open_paxel.analysis.context import (
     OpenAICallRecord,
