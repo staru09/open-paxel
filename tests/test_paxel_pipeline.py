@@ -1,9 +1,13 @@
-import pytest
+import json
+from pathlib import Path
 
 from open_paxel.decisions.catalog import catalog_by_key, load_decision_catalog
-from open_paxel.discover.scanner import discover_repo_for_cwd, filter_repos_by_cwd
-from open_paxel.discover.scanner import RepoInfo, _claude_encoded_key
-from pathlib import Path
+from open_paxel.discover.scanner import (
+    RepoInfo,
+    _claude_encoded_key,
+    discover_repo_for_cwd,
+    filter_repos_by_cwd,
+)
 
 
 def test_decision_catalog_loads():
@@ -83,7 +87,7 @@ def test_filter_repos_matches_gpu_visuals_alias():
         RepoInfo(
             name="visuals",
             path=r"C:\Users\91745\OneDrive\Desktop\gpu\visuals",
-            encoded_dir="gpu",
+            encoded_dir="C--Users-91745-OneDrive-Desktop-gpu-visuals",
             session_count=2,
             session_paths=[],
         ),
@@ -122,25 +126,24 @@ def test_filter_repos_matches_audiobook_generator_encoded_key():
     assert matched[0].encoded_dir == "Z--June-26-audiobook-generator"
 
 
-def test_discover_repo_corrects_path_for_audiobook_generator():
-    repos = [
-        RepoInfo(
-            name="generator",
-            path=r"Z:\June\26\audiobook\generator",
-            encoded_dir="Z--June-26-audiobook-generator",
-            session_count=1,
-            session_paths=[],
-        ),
-    ]
-    cwd = Path(r"Z:\June 26\audiobook_generator")
-    matched = filter_repos_by_cwd(repos, cwd)
-    assert len(matched) == 1
-    # discover_repo_for_cwd uses live discover_repos(); test correction helper via filter + manual check
-    from open_paxel.discover.scanner import _correct_repo_path
+def test_discover_repo_reads_real_path_from_transcript_cwd(tmp_path):
+    # "my_app.v2" encodes to "...-my-app-v2"; decoding alone would give my/app/v2.
+    project = tmp_path / "work" / "my_app.v2"
+    project.mkdir(parents=True)
+    projects_root = tmp_path / "projects"
+    folder = projects_root / _claude_encoded_key(project.resolve())
+    folder.mkdir(parents=True)
+    (folder / "s1.jsonl").write_text(
+        json.dumps({"type": "summary"}) + "\n" + json.dumps({"cwd": str(project.resolve())}) + "\n",
+        encoding="utf-8",
+    )
 
-    corrected = _correct_repo_path(matched[0], cwd.resolve())
-    assert corrected.path == str(cwd.resolve())
-    assert corrected.name == "audiobook_generator"
+    repo = discover_repo_for_cwd(project, projects_root=projects_root)
+
+    assert repo is not None
+    assert repo.path == str(project.resolve())
+    assert repo.name == "my_app.v2"
+    assert repo.session_count == 1
 
 
 def test_claude_encoded_key_posix():

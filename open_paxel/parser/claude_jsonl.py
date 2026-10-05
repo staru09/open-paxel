@@ -17,16 +17,9 @@ from open_paxel.text.tokens import estimate_tokens
 
 
 def decode_project_path(encoded: str) -> str:
-    """Decode Claude Code project folder name to path."""
-    if encoded.startswith("Z--"):
-        rest = encoded[3:]
-        return "Z:\\" + rest.replace("-", "\\")
-    if encoded.startswith("z--"):
-        rest = encoded[3:]
-        return "z:\\" + rest.replace("-", "\\")
-    if encoded.startswith("C--") or encoded.startswith("c--"):
-        rest = encoded[3:]
-        return "C:\\" + rest.replace("-", "\\")
+    """Best-effort decode of a Claude Code project folder name (lossy; prefer JSONL ``cwd``)."""
+    if len(encoded) > 3 and encoded[0].isalpha() and encoded[1:3] == "--":
+        return f"{encoded[0].upper()}:\\" + encoded[3:].replace("-", "\\")
     return encoded.replace("-", "/")
 
 
