@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 
 from open_paxel.parser.auto import AutoTranscriptParser
 from open_paxel.parser.text_session import TextSessionParser

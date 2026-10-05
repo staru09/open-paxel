@@ -167,7 +167,6 @@ def profile(
     open_browser: bool = typer.Option(False, "--open", help="Start server and open dashboard"),
 ):
     """Show aggregated builder profile."""
-    import webbrowser
 
     settings = Settings.load()
     if open_browser:
@@ -242,7 +241,6 @@ def serve(
 
     import uvicorn
 
-    from open_paxel.api.app import create_app
     from open_paxel.logging_config import setup_logging
 
     setup_logging(log_level)

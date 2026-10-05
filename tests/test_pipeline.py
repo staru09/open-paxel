@@ -4,7 +4,6 @@ from open_paxel.config import Settings
 from open_paxel.db.repository import SQLiteRepository
 from open_paxel.models.domain import DimensionScore, SessionScore
 from open_paxel.pipeline import AnalysisPipeline
-from open_paxel.scorer.openai_scorer import OpenAIScorer
 
 
 class MockScorer:

@@ -8,7 +8,6 @@ from open_paxel.analysis.context import emit_progress
 from open_paxel.config import Settings
 from open_paxel.discover.scanner import discover_repo_for_cwd
 from open_paxel.git.reader import code_quality_label, link_commits_to_session, read_git_log
-from open_paxel.models.domain import DIMENSIONS, DimensionScore
 from open_paxel.models.pipeline_models import PipelineArtifacts
 from open_paxel.pipeline.context import PipelineContext
 from open_paxel.pipeline.steps.decisions import (

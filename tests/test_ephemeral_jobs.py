@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -36,7 +35,7 @@ def test_ephemeral_jobs_cleared_on_startup(tmp_path):
 
     settings = Settings(home=home, ephemeral_jobs=True)
     app = create_app(settings)
-    with TestClient(app) as client:
+    with TestClient(app):
         repo = app.state.repository
         job = repo.create_job(total_count=1)
         assert repo.get_job(job.id) is not None
@@ -57,7 +56,7 @@ def test_ephemeral_jobs_persist_when_disabled(tmp_path):
     settings = Settings(home=home, ephemeral_jobs=False)
 
     app = create_app(settings)
-    with TestClient(app) as client:
+    with TestClient(app):
         repo = app.state.repository
         job = repo.create_job(total_count=1)
         job_id = job.id

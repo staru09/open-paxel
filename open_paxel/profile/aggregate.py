@@ -7,6 +7,7 @@ from open_paxel.models.domain import (
     InsightCard,
     SessionReport,
     UploadReport,
+    utcnow,
 )
 from open_paxel.models.pipeline_models import Episode
 from open_paxel.profile.insights import build_insight_cards, collect_profile_signals
@@ -28,10 +29,8 @@ def collect_episodes(uploads: list[UploadReport]) -> list[Episode]:
 
 def build_profile(reports: list[SessionReport], uploads: list[UploadReport]) -> BuilderProfile:
     if not reports:
-        from datetime import datetime
-
         return BuilderProfile(
-            updated_at=datetime.utcnow(),
+            updated_at=utcnow(),
             insight_cards=[
                 InsightCard(
                     id="empty",
@@ -44,7 +43,6 @@ def build_profile(reports: list[SessionReport], uploads: list[UploadReport]) -> 
         )
 
     from collections import Counter
-    from datetime import datetime
 
     dim_sums: dict[str, list[float]] = {d: [] for d in DIMENSIONS}
     all_moves: list[str] = []
@@ -94,7 +92,7 @@ def build_profile(reports: list[SessionReport], uploads: list[UploadReport]) -> 
     insight_cards = build_insight_cards(signals, decision_stats=decision_stats)
 
     return BuilderProfile(
-        updated_at=datetime.utcnow(),
+        updated_at=utcnow(),
         session_count=len(reports),
         upload_count=len(uploads),
         dimensions=dimensions,

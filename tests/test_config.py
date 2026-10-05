@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from open_paxel.config import Settings, load_env_files, project_root
 

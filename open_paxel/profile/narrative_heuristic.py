@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from open_paxel.models.domain import DIMENSIONS, SessionReport
+from open_paxel.models.domain import SessionReport
 from open_paxel.models.pipeline_models import Episode
 from open_paxel.models.profile_narrative import ProfileNarrative
 from open_paxel.profile.insights import ProfileSignals, _the_archetype
@@ -19,7 +19,7 @@ def _format_exchange_stats(stats: dict[str, object]) -> str:
     total = stats.get("total", 0)
     parts = [f"{count} {label.replace('_', ' ')}" for label, count in by_type.items()]
     arch = by_type.get("strategic_redirect", 0) + by_type.get("technical_catch", 0)
-    intro = f"Your decision style is architecture-heavy." if arch >= (total or 0) / 2 else (
+    intro = "Your decision style is architecture-heavy." if arch >= (total or 0) / 2 else (
         "Your decision style balances exploration with targeted corrections."
     )
     return f"{intro} Across {total} tracked decision(s): " + ", ".join(parts) + "."

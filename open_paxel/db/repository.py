@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from pathlib import Path
 
 from open_paxel.db.models import (
@@ -12,7 +11,14 @@ from open_paxel.db.models import (
     init_db,
     make_engine,
 )
-from open_paxel.models.domain import BuilderProfile, ProcessingJob, ProcessingJobFileResult, SessionReport, UploadReport
+from open_paxel.models.domain import (
+    BuilderProfile,
+    ProcessingJob,
+    ProcessingJobFileResult,
+    SessionReport,
+    UploadReport,
+    utcnow,
+)
 from open_paxel.models.pipeline_models import PipelineArtifacts
 from open_paxel.profile.aggregate import build_profile
 
@@ -76,7 +82,7 @@ class SQLiteRepository:
         upload_id = str(uuid.uuid4())
         upload = UploadReport(
             id=upload_id,
-            created_at=datetime.utcnow(),
+            created_at=utcnow(),
             session_count=len(session_ids),
             project_paths=sorted(set(project_paths)),
             session_ids=session_ids,
@@ -212,7 +218,7 @@ class SQLiteRepository:
         results: list[ProcessingJobFileResult] | None = None,
     ) -> ProcessingJob:
         job_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = utcnow()
         initial_results = [r.model_dump(mode="json") for r in (results or [])]
         row = ProcessingJobRow(
             id=job_id,
@@ -266,7 +272,7 @@ class SQLiteRepository:
             calls = list(row.openai_calls_json or [])
             calls.append(call)
             row.openai_calls_json = calls[-200:]
-            row.updated_at = datetime.utcnow()
+            row.updated_at = utcnow()
             session.commit()
 
     def append_job_log(self, job_id: str, message: str) -> None:
@@ -277,7 +283,7 @@ class SQLiteRepository:
             logs = list(row.logs_json or [])
             logs.append(message)
             row.logs_json = logs[-100:]
-            row.updated_at = datetime.utcnow()
+            row.updated_at = utcnow()
             session.commit()
 
     def update_job(self, job_id: str, **fields) -> None:
@@ -291,5 +297,5 @@ class SQLiteRepository:
             for key, value in fields.items():
                 if hasattr(row, key):
                     setattr(row, key, value)
-            row.updated_at = datetime.utcnow()
+            row.updated_at = utcnow()
             session.commit()

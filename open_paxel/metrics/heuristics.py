@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 
-from open_paxel.models.domain import DIMENSIONS, HeuristicMetrics, SessionFacts
+from open_paxel.models.domain import HeuristicMetrics, SessionFacts
 
 STOPWORDS = {
     "a", "an", "the", "to", "in", "on", "for", "of", "and", "or", "is", "it",

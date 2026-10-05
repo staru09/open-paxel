@@ -60,8 +60,6 @@ class ClaudeCodeJsonlParser:
         test_lint = 0
         timestamps: list[datetime] = []
         raw_turn_count = 0
-        last_was_tool = False
-        steering_after_tool = 0
 
         local_commands_removed = 0
         tool_only_turns_removed = 0
@@ -93,9 +91,6 @@ class ClaudeCodeJsonlParser:
                 if isinstance(content, str):
                     text = content
                     raw_turn_count += 1
-                    if last_was_tool:
-                        steering_after_tool += 1
-                    last_was_tool = False
                     wc = len(text.split())
                     user_messages.append(
                         UserMessage(
@@ -114,7 +109,6 @@ class ClaudeCodeJsonlParser:
                         caps_hits += 1
                 elif isinstance(content, list):
                     tool_only_turns_removed += 1
-                    last_was_tool = True
                     for block in content:
                         if isinstance(block, dict) and block.get("is_error"):
                             tool_errors += 1
@@ -154,7 +148,6 @@ class ClaudeCodeJsonlParser:
                                     local_commands_removed += 1
                                 if TEST_LINT_PATTERN.search(cmd):
                                     test_lint += 1
-                last_was_tool = False
 
             # tool result with toolStats from Agent (toolUseResult may be dict or error string)
             if rtype == "user":
@@ -175,10 +168,6 @@ class ClaudeCodeJsonlParser:
         ended_at = timestamps[-1] if timestamps else None
         if started_at and ended_at:
             duration_ms = int((ended_at - started_at).total_seconds() * 1000)
-
-        steering_rate = (
-            steering_after_tool / raw_turn_count if raw_turn_count else 0.0
-        )
 
         full_text = " ".join(m.text for m in user_messages)
         total_tokens = estimate_tokens(full_text) + estimate_tokens("x" * assistant_chars)

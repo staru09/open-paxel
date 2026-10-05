@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 
 from open_paxel.metrics.heuristics import compute_heuristics
 from open_paxel.parser.claude_jsonl import ClaudeCodeJsonlParser, decode_project_path

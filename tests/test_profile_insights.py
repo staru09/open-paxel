@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from open_paxel.metrics.heuristics import compute_heuristics
-from open_paxel.models.domain import DimensionScore, HeuristicMetrics, SessionFacts, SessionReport, UserMessage
+from open_paxel.models.domain import HeuristicMetrics, SessionFacts, SessionReport, UserMessage
 from open_paxel.profile.insights import build_insight_cards, collect_profile_signals
 
 

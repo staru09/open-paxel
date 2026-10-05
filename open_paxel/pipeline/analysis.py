@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 
 from open_paxel.metrics.heuristics import blend_dimension, compute_heuristics
-from open_paxel.models.domain import DIMENSIONS, DimensionScore, SessionReport
+from open_paxel.models.domain import DIMENSIONS, DimensionScore, SessionReport, utcnow
 from open_paxel.parser.auto import AutoTranscriptParser
 from open_paxel.redact.excerpts import build_excerpts
 from open_paxel.redact.transcript import read_full_transcript
@@ -117,7 +116,7 @@ class AnalysisPipeline:
             transcript_path=str(path),
             project_path=facts.project_path,
             title=facts.title,
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=utcnow(),
             started_at=facts.started_at,
             ended_at=facts.ended_at,
             dimensions=dimensions,

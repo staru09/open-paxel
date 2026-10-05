@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -13,6 +13,12 @@ from open_paxel.models.pipeline_models import (
     SessionNarrative,
     SteeringTrace,
 )
+from open_paxel.models.scores import DimensionScore
+
+
+def utcnow() -> datetime:
+    """Naive UTC timestamp (stored datetimes are naive UTC)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 DIMENSIONS = ("steering", "execution", "engineering", "product_instinct", "planning")
@@ -96,9 +102,6 @@ class RedactedExcerpt(BaseModel):
     metrics_json: dict[str, Any] = Field(default_factory=dict)
 
 
-from open_paxel.models.scores import DimensionScore
-
-
 class SessionScore(BaseModel):
     dimensions: dict[str, DimensionScore] = Field(default_factory=dict)
     archetype: str = "Explorer"
@@ -112,7 +115,7 @@ class SessionReport(BaseModel):
     transcript_path: str
     project_path: str | None = None
     title: str | None = None
-    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    analyzed_at: datetime = Field(default_factory=utcnow)
     dimensions: dict[str, DimensionScore] = Field(default_factory=dict)
     archetype: str = "Explorer"
     signature_moves: list[str] = Field(default_factory=list)
@@ -174,7 +177,7 @@ class ProcessingJob(BaseModel):
 
 
 class BuilderProfile(BaseModel):
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
     session_count: int = 0
     upload_count: int = 0
     dimensions: dict[str, float] = Field(default_factory=dict)
