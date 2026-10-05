@@ -43,7 +43,6 @@ dev = [
   "ruff>=0.8",
   "build>=1.0",
 ]
-anthropic = ["anthropic>=0.40"]
 
 [project.urls]
 Homepage = "https://github.com/staru09/open-paxel"
