@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import tomllib
 from functools import lru_cache
 from pathlib import Path
 
@@ -72,6 +73,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="OPEN_PAXEL_",
         extra="ignore",
+        populate_by_name=True,  # config.toml uses field names, e.g. openai_api_key
     )
 
     home: Path = Field(default_factory=default_home)
@@ -152,36 +154,21 @@ class Settings(BaseSettings):
         # 1) .env (project, then ~/.open-paxel/) — does not override existing env vars
         load_env_files(override=False)
 
-        # 2) ~/.open-paxel/config.toml as defaults
-        home = default_home()
-        config_file = home / "config.toml"
+        # 2) ~/.open-paxel/config.toml as defaults. Init kwargs beat env vars in
+        #    pydantic-settings, so drop keys the environment already sets.
+        config_file = default_home() / "config.toml"
         toml_data: dict = {}
         if config_file.exists():
-            toml_data.update(_parse_simple_toml(config_file.read_text(encoding="utf-8")))
+            toml_data = tomllib.loads(config_file.read_text(encoding="utf-8"))
+        return cls(**{k: v for k, v in toml_data.items() if not cls._set_in_env(k)})
 
-        # 3) pydantic-settings reads os.environ (wins over toml kwargs)
-        return cls(**toml_data)
-
-
-def _parse_simple_toml(text: str) -> dict:
-    """Minimal TOML parser for flat key = value config."""
-    result: dict = {}
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        if value.isdigit():
-            result[key] = int(value)
-        elif value.lower() in ("true", "false"):
-            result[key] = value.lower() == "true"
-        else:
-            result[key] = value
-    return result
+    @classmethod
+    def _set_in_env(cls, field: str) -> bool:
+        names = {f"OPEN_PAXEL_{field.upper()}"}
+        info = cls.model_fields.get(field)
+        if info and isinstance(info.validation_alias, AliasChoices):
+            names.update(c for c in info.validation_alias.choices if isinstance(c, str))
+        return any(name in os.environ for name in names)
 
 
 def write_default_config(home: Path, api_key: str) -> Path:

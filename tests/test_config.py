@@ -31,3 +31,22 @@ def test_env_overrides_toml(tmp_path, monkeypatch):
 
 def test_project_root_has_pyproject():
     assert (project_root() / "pyproject.toml").exists()
+
+
+def test_toml_values_load_and_env_wins(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "config.toml").write_text(
+        'openai_api_key = "sk-from-toml"\nmodel = "toml-model"\nconcurrency = 7\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OPEN_PAXEL_HOME", str(home))
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPEN_PAXEL_MODEL", "env-model")
+    monkeypatch.setattr("open_paxel.config.load_env_files", lambda **_: [])
+
+    settings = Settings.load()
+
+    assert settings.openai_api_key == "sk-from-toml"
+    assert settings.model == "env-model"
+    assert settings.concurrency == 7
