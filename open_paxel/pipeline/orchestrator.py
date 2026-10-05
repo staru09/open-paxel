@@ -6,7 +6,6 @@ from collections.abc import Callable
 
 from open_paxel.analysis.context import emit_progress
 from open_paxel.config import Settings
-from open_paxel.discover.scanner import discover_repo_for_cwd
 from open_paxel.git.reader import code_quality_label, link_commits_to_session, read_git_log
 from open_paxel.models.pipeline_models import PipelineArtifacts
 from open_paxel.pipeline.context import PipelineContext
@@ -180,7 +179,3 @@ class PaxelPipeline:
         timings.append((STEP_LABELS[10], time.perf_counter() - t0))
 
         return ctx.artifacts()
-
-    @staticmethod
-    def discover_cwd():
-        return discover_repo_for_cwd()

@@ -58,12 +58,3 @@ def reset_app_data(settings: Settings) -> None:
         logger.warning("Could not remove %s (%s); wiping tables in place", db_path, exc)
         wipe_database_tables(db_path)
 
-
-def reset_brain_dump_data(settings: Settings) -> None:
-    """Deprecated alias for reset_app_data (legacy Brain Dump name)."""
-    reset_app_data(settings)
-
-
-def reset_open_paxel_data(settings: Settings) -> None:
-    """Deprecated alias for reset_app_data."""
-    reset_app_data(settings)

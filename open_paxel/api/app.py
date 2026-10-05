@@ -21,14 +21,10 @@ logger = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
-def _cleanup_incoming(incoming_dir: Path) -> None:
-    cleanup_incoming(incoming_dir)
-
-
 def _clear_ephemeral_state(settings: Settings, repo: SQLiteRepository) -> None:
     deleted = repo.clear_ephemeral_state()
     incoming = settings.home / "incoming"
-    _cleanup_incoming(incoming)
+    cleanup_incoming(incoming)
     logger.info(
         "Cleared ephemeral state: %d job(s) removed, incoming dir reset",
         deleted,

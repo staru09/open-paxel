@@ -3,8 +3,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from open_paxel.text.tokens import estimate_tokens
-
 SECRET_PATTERNS = [
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.S),
     re.compile(r"sk-[A-Za-z0-9_-]{20,}"),  # OpenAI, Anthropic (sk-ant-...), OpenRouter
@@ -31,6 +29,9 @@ def read_full_transcript(facts) -> str:
 
 
 def _read_full_transcript(facts) -> str:
+    # Lazy: open_paxel.text -> parser -> redact import cycle.
+    from open_paxel.text.tokens import estimate_tokens
+
     parts = [m.text for m in facts.user_messages]
     if facts.assistant_text_chars:
         parts.append("[assistant output omitted from structured export]")
