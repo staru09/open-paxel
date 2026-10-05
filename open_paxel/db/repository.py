@@ -35,7 +35,6 @@ class SQLiteRepository:
             )
             session.merge(row)
             session.commit()
-        self._refresh_profile_cache()
 
     def get_report(self, session_id: str) -> SessionReport | None:
         with self.Session() as session:
@@ -55,7 +54,7 @@ class SQLiteRepository:
             row.title = report.title
             row.report_json = report.model_dump(mode="json")
             session.commit()
-        self._refresh_profile_cache()
+        self.refresh_profile()
         return report
 
     def list_reports(self, limit: int = 100, offset: int = 0) -> list[SessionReport]:
@@ -97,7 +96,6 @@ class SQLiteRepository:
                 if row:
                     row.upload_id = upload_id
             session.commit()
-        self._refresh_profile_cache()
         return upload
 
     def get_upload(self, upload_id: str) -> UploadReport | None:
@@ -145,17 +143,28 @@ class SQLiteRepository:
             row.pipeline_json = artifacts.model_dump(mode="json")
             session.commit()
 
-    def get_profile(self) -> BuilderProfile:
+    def _cached_profile(self) -> BuilderProfile | None:
         with self.Session() as session:
             cached = session.get(ProfileRow, 1)
-            if cached:
-                return BuilderProfile.model_validate(cached.profile_json)
-        return self._refresh_profile_cache()
+            return BuilderProfile.model_validate(cached.profile_json) if cached else None
 
-    def _refresh_profile_cache(self) -> BuilderProfile:
-        reports = self.list_reports(limit=10_000)
-        uploads = self.list_uploads()
-        profile = build_profile(reports, uploads)
+    def get_profile(self) -> BuilderProfile:
+        return self._cached_profile() or self.refresh_profile()
+
+    def refresh_profile(self) -> BuilderProfile:
+        """Rebuild the heuristic profile outside a batch run.
+
+        Keeps the LLM narrative and pipeline artifacts from the last batch; the next
+        upload regenerates them.
+        """
+        profile = build_profile(self.list_reports(limit=10_000), self.list_uploads())
+        if cached := self._cached_profile():
+            profile = profile.model_copy(
+                update={
+                    "narrative": cached.narrative,
+                    "pipeline_artifacts": cached.pipeline_artifacts,
+                }
+            )
         self.save_profile_cache(profile)
         return profile
 
@@ -169,9 +178,6 @@ class SQLiteRepository:
                 )
             )
             session.commit()
-
-    def all_reports_for_profile(self) -> list[SessionReport]:
-        return self.list_reports(limit=10_000)
 
     def clear_ephemeral_state(self) -> int:
         """Remove in-flight upload jobs (ephemeral testing mode)."""

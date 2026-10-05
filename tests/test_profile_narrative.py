@@ -58,3 +58,45 @@ def test_narrative_heuristic_matched_pattern():
     )
     assert narrative.matched_pattern == "Model the data owner"
     assert narrative.matched_pattern_category
+
+
+def test_profile_keeps_episodes_from_all_uploads():
+    from open_paxel.models.domain import UploadReport
+    from open_paxel.models.pipeline_models import Episode, PipelineArtifacts
+    from open_paxel.models.scores import DimensionScore
+
+    def upload(uid, day, episodes):
+        return UploadReport(
+            id=uid,
+            created_at=datetime(2026, 6, day),
+            session_count=1,
+            pipeline_artifacts=PipelineArtifacts(episodes=episodes),
+        )
+
+    def episode(eid, sessions, score):
+        dims = {"planning": DimensionScore(score=score)}
+        return Episode(id=eid, work_stream_id=eid, session_ids=sessions, dimensions=dims)
+
+    uploads = [
+        upload("old", 1, [episode("a", ["s1"], 10), episode("b", ["s2"], 50)]),
+        # Re-analyzed s1 in a newer upload: replaces episode "a", "b" stays.
+        upload("new", 2, [episode("a2", ["s1"], 90)]),
+    ]
+    profile = build_profile([_report()], uploads)
+
+    assert sorted(e.id for e in profile.episodes) == ["a2", "b"]
+    assert profile.dimensions["planning"] == 70.0
+
+
+def test_rename_keeps_cached_llm_narrative(tmp_path):
+    from open_paxel.db.repository import SQLiteRepository
+    from open_paxel.models.profile_narrative import ProfileNarrative
+
+    repo = SQLiteRepository(tmp_path / "profile.db")
+    repo.save_report(_report())
+    llm = ProfileNarrative(narrative="from the LLM")
+    repo.save_profile_cache(repo.get_profile().model_copy(update={"narrative": llm}))
+
+    repo.update_report_title("s1", "Renamed")
+
+    assert repo.get_profile().narrative.narrative == "from the LLM"

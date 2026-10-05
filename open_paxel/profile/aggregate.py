@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from open_paxel.decisions.stats import aggregate_decisions
 from open_paxel.models.domain import (
     DIMENSIONS,
@@ -10,19 +8,25 @@ from open_paxel.models.domain import (
     SessionReport,
     UploadReport,
 )
+from open_paxel.models.pipeline_models import Episode
 from open_paxel.profile.insights import build_insight_cards, collect_profile_signals
 from open_paxel.profile.narrative_heuristic import build_profile_narrative
 
-if TYPE_CHECKING:
-    from open_paxel.pipeline.context import PipelineContext
+def collect_episodes(uploads: list[UploadReport]) -> list[Episode]:
+    """Episodes across all uploads; the newest upload wins for re-analyzed sessions."""
+    seen: set[str] = set()
+    episodes: list[Episode] = []
+    for upload in sorted(uploads, key=lambda u: u.created_at, reverse=True):
+        if not upload.pipeline_artifacts:
+            continue
+        for episode in upload.pipeline_artifacts.episodes:
+            if seen.isdisjoint(episode.session_ids):
+                episodes.append(episode)
+                seen.update(episode.session_ids)
+    return episodes
 
 
-def build_profile(
-    reports: list[SessionReport],
-    uploads: list[UploadReport],
-    *,
-    pipeline_ctx: PipelineContext | None = None,
-) -> BuilderProfile:
+def build_profile(reports: list[SessionReport], uploads: list[UploadReport]) -> BuilderProfile:
     if not reports:
         from datetime import datetime
 
@@ -57,15 +61,15 @@ def build_profile(
     top_archetype = signals.archetypes.most_common(1)[0][0] if signals.archetypes else "Explorer"
     dimensions = {d: round(sum(v) / len(v), 1) if v else 0.0 for d, v in dim_sums.items()}
 
-    if pipeline_ctx and pipeline_ctx.episodes:
-        scored = [e for e in pipeline_ctx.episodes if not e.skipped and e.dimensions]
-        if scored:
-            dim_sums = {d: [] for d in DIMENSIONS}
-            for episode in scored:
-                for dim in DIMENSIONS:
-                    if dim in episode.dimensions:
-                        dim_sums[dim].append(episode.dimensions[dim].score)
-            dimensions = {d: round(sum(v) / len(v), 1) if v else 0.0 for d, v in dim_sums.items()}
+    episodes = collect_episodes(uploads)
+    scored = [e for e in episodes if not e.skipped and e.dimensions]
+    if scored:
+        dim_sums = {d: [] for d in DIMENSIONS}
+        for episode in scored:
+            for dim in DIMENSIONS:
+                if dim in episode.dimensions:
+                    dim_sums[dim].append(episode.dimensions[dim].score)
+        dimensions = {d: round(sum(v) / len(v), 1) if v else 0.0 for d, v in dim_sums.items()}
 
     move_counts = Counter(all_moves)
     growth_counts = Counter(all_growth)
@@ -75,8 +79,6 @@ def build_profile(
     all_decisions = []
     for report in reports:
         all_decisions.extend(report.decisions)
-    if pipeline_ctx and pipeline_ctx.decisions:
-        all_decisions = pipeline_ctx.decisions
     decision_stats = aggregate_decisions(all_decisions)
 
     narrative = build_profile_narrative(
@@ -86,12 +88,12 @@ def build_profile(
         signature_moves=signature_moves,
         growth_edge=growth_edge_list,
         decision_stats=decision_stats,
-        episodes=pipeline_ctx.episodes if pipeline_ctx else [],
+        episodes=episodes,
     )
 
     insight_cards = build_insight_cards(signals, decision_stats=decision_stats)
 
-    profile = BuilderProfile(
+    return BuilderProfile(
         updated_at=datetime.utcnow(),
         session_count=len(reports),
         upload_count=len(uploads),
@@ -102,12 +104,5 @@ def build_profile(
         growth_edge=growth_edge_list,
         insight_cards=insight_cards,
         narrative=narrative,
+        episodes=episodes,
     )
-    if pipeline_ctx:
-        profile = profile.model_copy(
-            update={
-                "episodes": pipeline_ctx.episodes,
-                "pipeline_artifacts": pipeline_ctx.artifacts(),
-            }
-        )
-    return profile

@@ -32,10 +32,6 @@ def _repo(settings: Settings) -> SQLiteRepository:
     return SQLiteRepository(settings.db_path)
 
 
-def _pipeline(settings: Settings) -> AnalysisPipeline:
-    return AnalysisPipeline(settings, _repo(settings))
-
-
 @app.command()
 def discover():
     """Show Claude Code sessions for the current project directory."""
@@ -88,8 +84,10 @@ def analyze(
         raise typer.Exit(1)
 
     async def run():
-        pipeline = _pipeline(settings)
-        report = await pipeline.analyze_file(path, force=force)
+        repo = _repo(settings)
+        report = await AnalysisPipeline(settings, repo).analyze_file(path, force=force)
+        if not settings.dry_run:
+            repo.refresh_profile()
         console.print(f"[green]Analyzed[/green] {report.session_id}: {report.title or 'Untitled'}")
         for dim, score in report.dimensions.items():
             console.print(f"  {dim}: {score.score}")
@@ -118,11 +116,8 @@ def upload(
         console.print("[red]No Claude Code sessions found for this directory.[/red]")
         raise typer.Exit(1)
 
-    paths: list[Path] = []
-    for p in repo_info.session_paths:
-        if not force and _repo(settings).report_exists(p.stem):
-            continue
-        paths.append(p)
+    repo = _repo(settings)
+    paths = [p for p in repo_info.session_paths if force or not repo.report_exists(p.stem)]
 
     if not paths:
         console.print("[yellow]All sessions already analyzed. Use --force to re-run.[/yellow]")
@@ -134,8 +129,8 @@ def upload(
         raise typer.Exit(0)
 
     async def batch():
-        pipeline = _pipeline(settings)
-        paxel = PaxelPipeline(settings, _repo(settings))
+        pipeline = AnalysisPipeline(settings, repo)
+        paxel = PaxelPipeline(settings, repo)
         sem = asyncio.Semaphore(settings.concurrency)
 
         async def one(p: Path):
@@ -149,7 +144,7 @@ def upload(
         results = await asyncio.gather(*[one(p) for p in paths])
         ok = [r for r in results if r]
         if ok and not dry_run:
-            upload_report = _repo(settings).create_upload(
+            upload_report = repo.create_upload(
                 [r.session_id for r in ok],
                 [repo_info.path],
             )
