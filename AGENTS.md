@@ -60,13 +60,12 @@ API (api/routes/*) ────────┼──► upload/worker.py
 2. Read git history  
 3. Link commits to sessions (requires `started_at`/`ended_at`)  
 4. Group work streams  
-5. Steering traces (on reports from per-session step)  
-6. Classify decisions (LLM)  
-7. Redact decisions  
-8. Link decision outcomes + catalog match  
-9. Code quality label  
-10. Score episodes (LLM)  
-11. Assemble profile  
+5. Classify decisions (LLM; steering traces come from the per-session step)  
+6. Redact decisions  
+7. Link decision outcomes + catalog match  
+8. Code quality label  
+9. Score episodes (LLM)  
+10. Assemble profile (episodes from all uploads)  
 
 ---
 
@@ -117,7 +116,7 @@ uv tool install --editable .
 ## Coding conventions
 
 1. **Minimize scope** — smallest correct diff; match existing style in surrounding files.
-2. **Avoid circular imports** — known cycle: `aggregate` ↔ `pipeline` ↔ `assembler` ↔ `enrich`. Use:
+2. **Avoid circular imports** — known cycle: `aggregate` ↔ `pipeline` ↔ `assembler`. Use:
    - `TYPE_CHECKING` imports in type hints
    - Lazy imports inside functions
    - `pipeline/__init__.py` lazy `PaxelPipeline` via `__getattr__`

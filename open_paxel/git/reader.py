@@ -79,14 +79,28 @@ def code_quality_label(project_path: str | Path) -> str:
         return "empty_repo"
     if not (path / ".git").exists():
         return "empty_repo"
-    test_globs = list(path.glob("**/test_*.py")) + list(path.glob("**/*_test.py"))
+    # Tracked files only: a rglob would crawl node_modules/.venv.
+    try:
+        tracked = subprocess.run(
+            ["git", "-C", str(path), "ls-files"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        ).stdout.splitlines()
+    except (OSError, subprocess.TimeoutExpired):
+        tracked = []
+    has_tests = any(
+        (name.startswith("test_") or name.endswith("_test.py")) and name.endswith(".py")
+        for name in (Path(f).name for f in tracked)
+    )
     has_linter = any(
         (path / name).exists()
         for name in ("ruff.toml", ".ruff.toml", "pyproject.toml", "eslint.config.js")
     )
-    if test_globs and has_linter:
+    if has_tests and has_linter:
         return "tested"
-    if test_globs or has_linter:
+    if has_tests or has_linter:
         return "active"
     try:
         result = subprocess.run(
