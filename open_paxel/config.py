@@ -12,7 +12,6 @@ _LEGACY_ENV_ALIASES = {
     "BRAIN_DUMP_MODEL": "OPEN_PAXEL_MODEL",
     "BRAIN_DUMP_LLM_PROVIDER": "OPEN_PAXEL_LLM_PROVIDER",
     "BRAIN_DUMP_CONCURRENCY": "OPEN_PAXEL_CONCURRENCY",
-    "BRAIN_DUMP_REDACTION_LEVEL": "OPEN_PAXEL_REDACTION_LEVEL",
     "BRAIN_DUMP_DRY_RUN": "OPEN_PAXEL_DRY_RUN",
     "BRAIN_DUMP_EPHEMERAL_JOBS": "OPEN_PAXEL_EPHEMERAL_JOBS",
     "BRAIN_DUMP_WORK_STREAM_GAP_HOURS": "OPEN_PAXEL_WORK_STREAM_GAP_HOURS",
@@ -105,7 +104,6 @@ class Settings(BaseSettings):
     # Cap on condenser chunks. Beyond this, representative chunks are sampled
     # (first, last, evenly spaced) so a multi-million-token session stays bounded.
     condense_max_chunks: int = 12
-    redaction_level: str = "standard"
     dry_run: bool = False
     ephemeral_jobs: bool = False
     work_stream_gap_hours: int = 48
@@ -197,7 +195,6 @@ llm_provider = "openai"
 openai_api_key = "{api_key}"
 model = "gpt-4.1-mini"
 concurrency = 3
-redaction_level = "standard"
 
 # Max response tokens per LLM call. Reasoning models (e.g. qwen3) spend a large
 # share on hidden reasoning, so leave room for the reasoning trace AND the JSON
