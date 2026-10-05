@@ -197,6 +197,70 @@ model's side.
 - [ ] A minimum session count before a profile is shown as stable (e.g. a "low confidence"
   badge below it).
 
+## Merging many sessions into one profile
+
+**How it works today** (`profile/aggregate.py:build_profile`):
+- **Dimensions:** an unweighted mean of every session's scores. If any episodes were scored,
+  the profile uses the mean of episode scores instead. Mixing the two silently switches the
+  basis.
+- **No filtering or weighting:** a 2-minute session or a non-analyzable one weighs the same
+  as a 6-hour one.
+- **Archetype:** the most common per-session label.
+- **Signature moves / growth edge:** counts of identical strings. LLM wording varies, so
+  identical strings are rare and the counts mean little.
+- **Narrative:** the LLM sees `reports[:20]`, the 20 most recently *analyzed* sessions, not
+  the most recent or most representative ones. The heuristic narrative uses `[:5]`.
+- **Scorer versions:** scores from different models or prompts are averaged together.
+
+**Bug found while checking:** per-session archetype, signature moves and growth edge come only
+from `OpenAIScorer`, which runs only when `legacy_scorer=True` (off by default). With default
+settings every session is labeled "Explorer", so the profile archetype is always "Explorer"
+and moves/growth are empty. Session dimensions are heuristic-only, and LLM dimension
+scores arrive only through episodes.
+
+### Design decisions to make
+
+- [ ] **Unit of aggregation.** Pick one: session or episode (work stream). Episodes are
+  steadier because one task split across sessions counts once. Either way, use the same
+  unit for dimensions, archetype and moves.
+- [ ] **Which sessions count.** Exclude non-analyzable sessions and those below a minimum of
+  substance (e.g. fewer than 3 user turns or under 5 active minutes). Subagent/sidechain
+  transcripts roll into their parent session.
+- [ ] **Weighting.** Weight by substance: user turns or active duration, capped so one
+  marathon session can't dominate. Compare against an unweighted mean.
+- [ ] **Recency.** All-time vs exponential decay (e.g. 90-day half-life). Probably show
+  "current" (decayed) as the headline and keep all-time and a monthly trend line.
+- [ ] **Robust statistics.** Weighted median or trimmed mean instead of a plain mean.
+  Store a spread/confidence interval per dimension. Mark the profile "low confidence"
+  below the minimum session count from the research section above.
+- [ ] **Categorical fields.**
+  - Archetype becomes a distribution (e.g. 60% Architect / 30% Explorer), not a single
+    winner.
+  - Map signature moves and growth edges to decision-catalog keys (`assets/decision_catalog.json`)
+    before counting, so different wordings of the same pattern merge.
+- [ ] **Context splits.** Per-project and per-agent breakdowns (`source_agent`, P4). Decide
+  whether different agents need normalizing, since one agent may simply produce more tool
+  calls or redirects than another.
+- [ ] **Narrative input.** Pick representative sessions by weight, recency and project
+  variety instead of `reports[:20]`. For large histories, summarize each episode, then
+  merge the summaries.
+- [ ] **Scorer versions.** Store `scorer_version` on every session and episode score. Only
+  merge scores from the same version; rescore older ones, or keep them separate until
+  they're rescored.
+- [ ] **Incremental updates.** The profile should be a pure function of stored per-session and
+  per-episode results, so adding a session never re-runs the LLM on old ones.
+  `collect_episodes` already does this for episodes.
+- [ ] **Same user across machines and agents.** Today one local DB means one user. Define an
+  export/import of per-session results keyed by `(source_agent, session_id)`, so histories
+  from several machines or agents merge without duplicates.
+
+### Checks to add
+
+- [ ] Order doesn't matter: shuffling the sessions gives the same profile.
+- [ ] Re-uploading a session doesn't change the profile.
+- [ ] One trivial session moves no dimension by more than ε.
+- [ ] Adding the K-th session to a stable profile moves it by less than the noise floor.
+
 ## Also fixed during the refactor
 
 - [x] `openai_api_key` in `config.toml` (written by `init-config`) was ignored: aliased fields
