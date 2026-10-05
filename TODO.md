@@ -131,6 +131,72 @@ often; items marked *unverified* need a check on a real install before building.
 - Existing parsers to learn from: agentgrep (https://agentgrep.org/backends/), ccusage
   (https://github.com/ccusage/ccusage), deja-vu (https://github.com/vshulcz/deja-vu)
 
+## Research — minimum session data for a stable profile
+
+**Question:** what is the smallest slice of a session that gives the same profile as the
+full transcript? Hypothesis: we need every user message, but can drop most of the
+model's side.
+
+**Why it matters:**
+- Today the LLM gets the raw JSONL (`redact/transcript.py:read_full_transcript`), which is
+  mostly tool outputs, file contents and JSON syntax.
+- Above 12 × 120k chars the condenser samples chunks, so a 1M-token session drops roughly
+  65% or more of its content, user messages included.
+- Every other agent stores different fields, so knowing the minimum also tells us what
+  each new parser must extract.
+- Less input also means less cost, fewer chunks and less data leaving the machine.
+
+**Where the signals come from today:**
+- Heuristics use user messages, tool *counts* (Read/Grep/Write/Edit/Bash), plan-mode
+  entries, agent runs, tool errors, test/lint commands, lines changed and timestamps. They
+  never use assistant prose or tool outputs.
+- The LLM dimensions (steering, execution, engineering, product_instinct, planning) are
+  judged on user behavior. The model's side is context for what the user was reacting to.
+
+### Experiment
+
+- [ ] **Dataset.** 30+ Claude Code sessions: short, medium, and at least 5 over 200k tokens.
+  Also 3+ users' full histories, for the profile-level checks.
+- [ ] **Input levels** (each one adds to the one before):
+  - **L0:** metadata only. Heuristics, no LLM.
+  - **L1:** all user messages, verbatim, with timestamps.
+  - **L2:** + tool calls as one line each: name, short args (file path, command), and an
+    error/success flag. No outputs.
+  - **L3:** + assistant text cut down. Variants: only the assistant message right before
+    each user turn, or the first and last N chars of each assistant turn.
+  - **L4:** + tool outputs cut to 1–2 lines (error messages kept in full).
+  - **L5 (reference):** the full transcript with no chunk sampling. Use a long-context
+    model, or set `condense_max_chunks` high enough to cover everything.
+- [ ] **Noise floor.** Run L5 three times per session. Any level whose difference from L5
+  stays inside that run-to-run variance counts as "the same profile".
+- [ ] **Session-level metrics, per level vs L5:**
+  - difference in each dimension score
+  - archetype agreement
+  - Jaccard overlap of decision patterns from `decision_classifier`
+  - narrative agreement (LLM-judge)
+  - input tokens, cost and latency
+- [ ] **Profile-level metrics.**
+  - Rebuild each test user's profile from every level.
+  - Bootstrap over subsets of sessions to find how many sessions it takes before every
+    dimension stays within ±5 points. That's the minimum number of sessions for a
+    stable profile.
+- [ ] **Specific checks:**
+  - Can steering be judged without the assistant message the user was answering? (L1 vs L3)
+  - Do engineering and execution need test output, or is "a test command ran and
+    passed/failed" enough? (L2 vs L4)
+  - Are thinking blocks, file-history snapshots and duplicated `toolUseResult` content
+    ever useful?
+
+### Deliverables
+
+- [ ] Short results write-up: the chosen level, per-dimension differences, and cost savings.
+- [ ] A `render_compact_transcript(facts)` function at the chosen level. It replaces raw JSONL
+  as the LLM input in `read_full_transcript`. If most sessions then fit in a few chunks,
+  chunk sampling and its data loss go away.
+- [ ] A list of the minimum fields each parser must provide (feeds P4).
+- [ ] A minimum session count before a profile is shown as stable (e.g. a "low confidence"
+  badge below it).
+
 ## Also fixed during the refactor
 
 - [x] `openai_api_key` in `config.toml` (written by `init-config`) was ignored: aliased fields
