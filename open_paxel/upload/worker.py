@@ -71,35 +71,29 @@ async def run_upload_job(
                     try:
                         report = await pipeline.analyze_file(path, force=force)
                         ok_reports.append(report)
-                        result = ProcessingJobFileResult(
-                            filename=original_name,
-                            status="ok",
-                            session_id=report.session_id,
-                            title=report.title,
-                        )
-                        outcomes.append(result)
-                        repo.update_job(
-                            job_id,
-                            succeeded=len([r for r in outcomes if r.status == "ok"]),
-                            failed=len([r for r in outcomes if r.status == "error"]),
-                            results=outcomes,
+                        outcomes.append(
+                            ProcessingJobFileResult(
+                                filename=original_name,
+                                status="ok",
+                                session_id=report.session_id,
+                                title=report.title,
+                            )
                         )
                         log(f"Completed {original_name} → {report.title or report.session_id[:8]}")
                     except Exception as exc:
                         logger.exception("job=%s failed file=%s", job_id[:8], original_name)
-                        result = ProcessingJobFileResult(
-                            filename=original_name,
-                            status="error",
-                            error=str(exc),
-                        )
-                        outcomes.append(result)
-                        repo.update_job(
-                            job_id,
-                            succeeded=len([r for r in outcomes if r.status == "ok"]),
-                            failed=len([r for r in outcomes if r.status == "error"]),
-                            results=outcomes,
+                        outcomes.append(
+                            ProcessingJobFileResult(
+                                filename=original_name, status="error", error=str(exc)
+                            )
                         )
                         log(f"Failed {original_name}: {exc}")
+                    repo.update_job(
+                        job_id,
+                        succeeded=len(ok_reports),
+                        failed=len(outcomes) - len(ok_reports),
+                        results=outcomes,
+                    )
 
             await asyncio.gather(*(analyze_one(name, path) for name, path in files))
 
@@ -124,8 +118,6 @@ async def run_upload_job(
         succeeded = sum(1 for r in outcomes if r.status == "ok")
         failed = sum(1 for r in outcomes if r.status == "error")
         final_status = "completed" if succeeded else "failed"
-        if succeeded and failed:
-            final_status = "completed"
 
         repo.update_job(
             job_id,

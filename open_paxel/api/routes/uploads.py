@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["uploads"])
 
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+# Strong refs so background jobs aren't garbage-collected mid-run.
+_background_jobs: set[asyncio.Task] = set()
+
 
 class UploadFileResult(BaseModel):
     filename: str
@@ -92,6 +96,16 @@ async def _save_upload_files(
             )
             continue
 
+        if upload.size and upload.size > MAX_UPLOAD_BYTES:
+            skipped.append(
+                ProcessingJobFileResult(
+                    filename=filename,
+                    status="error",
+                    error=f"File exceeds {MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
+                )
+            )
+            continue
+
         content = await upload.read()
         if not content.strip():
             skipped.append(
@@ -160,7 +174,7 @@ async def upload_sessions(
             results=[UploadFileResult.model_validate(r.model_dump()) for r in job.results],
         )
 
-    asyncio.create_task(
+    task = asyncio.create_task(
         run_upload_job(
             job_id=job.id,
             files=saved,
@@ -169,6 +183,8 @@ async def upload_sessions(
             repo=repo,
         )
     )
+    _background_jobs.add(task)
+    task.add_done_callback(_background_jobs.discard)
 
     return JSONResponse(
         status_code=202,
