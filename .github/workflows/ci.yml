@@ -17,9 +17,4 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --all-groups
       - run: uv run ruff check open_paxel tests
-      - run: uv run pytest -q -rfE 2>&1 | tee pytest.log; exit ${PIPESTATUS[0]}
-        shell: bash
-      - name: Annotate failures
-        if: failure()
-        run: grep -E "^(FAILED|ERROR) " pytest.log | sed 's/^/::error::/' || true
-        shell: bash
+      - run: uv run pytest -q
