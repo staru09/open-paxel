@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { DEMO } from "../lib/api";
 import { JobProgressBanner } from "./JobProgressBanner";
 
 const links = [
   { to: "/", label: "Profile" },
   { to: "/sessions", label: "Sessions" },
-  { to: "/uploads", label: "Uploads" },
+  ...(DEMO ? [] : [{ to: "/uploads", label: "Uploads" }]),
 ];
 
 export function Layout() {
@@ -35,6 +36,14 @@ export function Layout() {
           </nav>
         </div>
       </header>
+      {DEMO && (
+        <div className="border-b-2 border-ink bg-warm-yellow px-6 py-2 text-center text-sm">
+          Demo profile built from fictional sample sessions.{" "}
+          <a className="font-semibold underline" href="https://github.com/staru09/open-paxel">
+            Run Open-Paxel on your own sessions
+          </a>
+        </div>
+      )}
       <JobProgressBanner />
       <main className="mx-auto max-w-6xl px-6 py-8">
         <Outlet />

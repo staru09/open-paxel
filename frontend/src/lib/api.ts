@@ -119,20 +119,24 @@ export interface ProcessingJob {
 
 const base = "";
 
+/** Static demo build (GitHub Pages): read pre-generated JSON instead of the API. */
+export const DEMO = import.meta.env.VITE_DEMO === "1";
+const demoUrl = (path: string) => `${import.meta.env.BASE_URL}api/${path}.json`;
+
 export async function fetchProfile(): Promise<BuilderProfile> {
-  const r = await fetch(`${base}/api/profile`);
+  const r = await fetch(DEMO ? demoUrl("profile") : `${base}/api/profile`);
   if (!r.ok) throw new Error("Failed to load profile");
   return r.json();
 }
 
 export async function fetchSessions(limit = 50): Promise<{ items: SessionSummary[] }> {
-  const r = await fetch(`${base}/api/sessions?limit=${limit}`);
+  const r = await fetch(DEMO ? demoUrl("sessions") : `${base}/api/sessions?limit=${limit}`);
   if (!r.ok) throw new Error("Failed to load sessions");
   return r.json();
 }
 
 export async function fetchSession(id: string): Promise<SessionReport> {
-  const r = await fetch(`${base}/api/sessions/${id}`);
+  const r = await fetch(DEMO ? demoUrl(`sessions/${id}`) : `${base}/api/sessions/${id}`);
   if (!r.ok) throw new Error("Session not found");
   return r.json();
 }
@@ -184,6 +188,7 @@ export async function uploadSessionFiles(files: File[], force = false): Promise<
 }
 
 export async function fetchActiveJobs(): Promise<ProcessingJob[]> {
+  if (DEMO) return [];
   const r = await fetch(`${base}/api/jobs?active=true`);
   if (!r.ok) throw new Error("Failed to load active jobs");
   return r.json();

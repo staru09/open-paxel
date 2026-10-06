@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateSessionTitle } from "../lib/api";
+import { DEMO, updateSessionTitle } from "../lib/api";
 
 export function EditableSessionTitle({
   sessionId,
@@ -50,6 +50,8 @@ export function EditableSessionTitle({
     }
     mutation.mutate(next);
   };
+
+  if (DEMO) return <span className={className}>{title || "Untitled session"}</span>;
 
   if (editing) {
     return (

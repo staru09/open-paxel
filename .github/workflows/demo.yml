@@ -1,0 +1,55 @@
+name: Demo site
+
+# Builds a demo profile from the fictional sessions in demo/sessions and
+# publishes the dashboard to GitHub Pages (Settings → Pages → Source: GitHub Actions).
+on:
+  push:
+    branches: [main]
+    paths: [demo/**, frontend/**, open_paxel/**, .github/workflows/demo.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build -- --base=/${{ github.event.repository.name }}/ --outDir ../site --emptyOutDir
+        working-directory: frontend
+        env:
+          VITE_DEMO: "1"
+      - run: uv run python demo/build_demo.py site
+        env:
+          # Optional repo secret: adds LLM narratives. Without it the profile is heuristic-only.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # SPA fallback so deep links like /sessions/<id> load the app.
+      - run: cp site/index.html site/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

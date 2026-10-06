@@ -10,6 +10,15 @@ Local-first, open [Paxel](https://paxel.ycombinator.com/)-style analyzer for **C
 
 ## Preview
 
+**Live demo:** https://staru09.github.io/open-paxel/ — a profile built from fictional sample
+sessions (`demo/sessions/`), rebuilt by GitHub Actions on every push to `main`. To build it
+locally:
+
+```bash
+cd frontend && npm ci && VITE_DEMO=1 npm run build -- --base=/ --outDir ../site --emptyOutDir && cd ..
+uv run python demo/build_demo.py site    # then serve ./site with any static server
+```
+
 <p align="center">
   <img src="./assets/main.png" alt="Open-Paxel profile: archetype, narrative, and what you built" width="720" />
 </p>

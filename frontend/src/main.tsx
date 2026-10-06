@@ -7,18 +7,19 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
 import { SessionsPage } from "./pages/SessionsPage";
 import { UploadsPage } from "./pages/UploadsPage";
+import { DEMO } from "./lib/api";
 import { syncServerSession } from "./lib/serverSession";
 import "./styles/theme.css";
 
 const queryClient = new QueryClient();
 
 async function bootstrap() {
-  await syncServerSession();
+  if (!DEMO) await syncServerSession();
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route element={<Layout />}>
               <Route index element={<ProfilePage />} />
