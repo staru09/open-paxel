@@ -10,13 +10,16 @@ Local-first, open [Paxel](https://paxel.ycombinator.com/)-style analyzer for **C
 
 ## Preview
 
-**Live demo:** https://staru09.github.io/open-paxel/ — a profile built from fictional sample
-sessions (`demo/sessions/`), rebuilt by GitHub Actions on every push to `main`. To build it
-locally:
+**Live demo:** https://staru09.github.io/open-paxel/ — a profile built from one real Claude Code
+session (redacted, scored with OpenAI), published by GitHub Actions on every push to `main`.
+Only the generated profile JSON in `demo/data/` is committed; the transcript is not.
 
 ```bash
+# Regenerate the demo data from your own sessions (uses OPENAI_API_KEY from the environment)
+uv run python demo/build_demo.py ~/.claude/projects/<project-folder> demo/data
+# Build and preview the static site
 cd frontend && npm ci && VITE_DEMO=1 npm run build -- --base=/ --outDir ../site --emptyOutDir && cd ..
-uv run python demo/build_demo.py site    # then serve ./site with any static server
+cp -r demo/data/api site/api    # then serve ./site with any static server
 ```
 
 <p align="center">

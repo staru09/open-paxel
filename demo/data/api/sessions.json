@@ -1,0 +1,17 @@
+{
+ "items": [
+  {
+   "session_id": "17e2244c-e3f0-4ebc-88f6-86d2bdb4080d",
+   "title": "Collusion dataset",
+   "project_path": "/data/rubygems-swarm",
+   "archetype": "Explorer",
+   "dimensions": {
+    "steering": 31.0,
+    "execution": 11.0,
+    "engineering": 45.0,
+    "product_instinct": 49.2,
+    "planning": 0.0
+   }
+  }
+ ]
+}

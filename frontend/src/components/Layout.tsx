@@ -38,7 +38,7 @@ export function Layout() {
       </header>
       {DEMO && (
         <div className="border-b-2 border-ink bg-warm-yellow px-6 py-2 text-center text-sm">
-          Demo profile built from fictional sample sessions.{" "}
+          Demo profile built from a real, redacted Claude Code session.{" "}
           <a className="font-semibold underline" href="https://github.com/staru09/open-paxel">
             Run Open-Paxel on your own sessions
           </a>

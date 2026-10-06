@@ -12,7 +12,7 @@ STOPWORDS = {
 
 
 def _clamp(v: float, lo: float = 0.0, hi: float = 100.0) -> float:
-    return max(lo, min(hi, v))
+    return round(max(lo, min(hi, v)), 1)
 
 
 def _phrase_counts(messages: list) -> list[tuple[str, int]]:

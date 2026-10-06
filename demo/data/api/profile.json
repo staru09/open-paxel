@@ -1,0 +1,67 @@
+{
+ "archetype": "Explorer",
+ "session_count": 1,
+ "upload_count": 1,
+ "dimensions": {
+  "steering": 60.0,
+  "execution": 55.0,
+  "engineering": 40.0,
+  "product_instinct": 50.0,
+  "planning": 45.0
+ },
+ "insight_cards": [
+  {
+   "id": "archetype",
+   "title": "Archetype",
+   "value": "The Explorer",
+   "subtitle": "You learn by probing, asking questions, and following curiosity threads.",
+   "question": "Which archetype are you?"
+  },
+  {
+   "id": "model",
+   "title": "Top model",
+   "value": "You reach for claude-opus-5-5",
+   "subtitle": "Used in 1 of 1 sessions (100%).",
+   "question": "Which model do you use most?"
+  },
+  {
+   "id": "productivity",
+   "title": "Productivity",
+   "value": "Early bird",
+   "subtitle": "100% of your activity shows up before noon.",
+   "question": "When are you most productive?"
+  },
+  {
+   "id": "goto",
+   "title": "Go-to phrase",
+   "value": "dataset here",
+   "subtitle": "Your most-used phrase, appearing 1 times across 1 session(s).",
+   "question": "What's your go-to prompt?"
+  },
+  {
+   "id": "prompts",
+   "title": "Prompt style",
+   "value": "Straight to the point",
+   "subtitle": "100% of your sessions skew toward prompts under 10 words.",
+   "question": "How long are your prompts?"
+  }
+ ],
+ "narrative": {
+  "narrative": "The user primarily employs Claude Code as an explorer and documentation tool rather than an implementation engine, focusing on data analysis, aggregation, and syntheses rather than code development or architectural design. They exhibit a balanced approach between control and delegation by exploring datasets themselves while relying on assistant support to organize and summarize complex data structures.",
+  "what_you_built": "In this session, the user explored and documented the \"Collusion dataset\" related to AI agent activity on a German wiki. They aggregated and summarized multiple dataset components including pages, revisions, events, labels, and external metadata such as URL shortener logs. The session culminated in producing a comprehensive Markdown explainer that detailed the dataset's structure, background, interrelations, and key findings. Additionally, environment notes and data quality observations were captured, though no source code or automation tools were developed or deployed.",
+  "decision_patterns": "The user's decision-making aligns with a methodical exploratory pattern focusing on understanding and documenting data rather than architecture-heavy or implementation-centric decisions. They maintained moderate steering with a clear goal to analyze and summarize the dataset but showed minimal strategic pivoting or iterative planning, indicative of an exploratory archetype. Scope control was centered around thorough documentation without extending into coding or product feature design, consistent with a data-first investigative approach.",
+  "matched_pattern": "Exploratory Data Investigator",
+  "matched_pattern_category": "Exploration & Documentation",
+  "strengths": [
+   "Effectively synthesized complex, multi-source datasets into coherent, comprehensive documentation (e.g., detailed explainer.md).",
+   "Demonstrated strong product instinct by contextualizing data relevance to AI agent collusion without straying into premature feature design.",
+   "Maintained moderate steering to keep the analysis focused amidst a complex dataset lacking prior clarifications.",
+   "Produced accurate data linkage corrections and environment annotations that improve dataset reliability for future use."
+  ],
+  "growth_areas": [
+   "Increase engineering impact by translating exploratory insights into automated pipelines or tooling to enhance reproducibility and scale.",
+   "Integrate iterative refinement cycles to deepen data analysis, moving beyond initial summarization towards actionable findings or prototypes.",
+   "Incorporate explicit planning practices by defining milestones and deliverables to balance exploratory work with strategic alignment and timeline management."
+  ]
+ }
+}

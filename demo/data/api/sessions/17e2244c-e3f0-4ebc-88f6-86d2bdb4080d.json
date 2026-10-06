@@ -1,0 +1,33 @@
+{
+ "session_id": "17e2244c-e3f0-4ebc-88f6-86d2bdb4080d",
+ "title": "Collusion dataset",
+ "project_path": "/data/rubygems-swarm",
+ "archetype": "Explorer",
+ "dimensions": {
+  "steering": {
+   "score": 31.0,
+   "narrative": "Heuristic score; episode rollup may refine.",
+   "evidence": []
+  },
+  "execution": {
+   "score": 11.0,
+   "narrative": "Heuristic score; episode rollup may refine.",
+   "evidence": []
+  },
+  "engineering": {
+   "score": 45.0,
+   "narrative": "Heuristic score; episode rollup may refine.",
+   "evidence": []
+  },
+  "product_instinct": {
+   "score": 49.2,
+   "narrative": "Heuristic score; episode rollup may refine.",
+   "evidence": []
+  },
+  "planning": {
+   "score": 0.0,
+   "narrative": "Heuristic score; episode rollup may refine.",
+   "evidence": []
+  }
+ }
+}
