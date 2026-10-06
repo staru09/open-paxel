@@ -261,6 +261,54 @@ scores arrive only through episodes.
 - [ ] One trivial session moves no dimension by more than ε.
 - [ ] Adding the K-th session to a stable profile moves it by less than the noise floor.
 
+## Richer builder characters
+
+**Goal:** profiles that read like a recognizable, specific character instead of one generic
+label, and that stay grounded in evidence.
+
+**Today:**
+- Six archetypes (`profile/insights.py`): Architect, Quality Guardian, Velocity Machine,
+  Night Owl, Explorer, Delegator. Each has a one-line description.
+- With default settings every profile is "Explorer" (see the merging section above).
+- The archetypes mix kinds of things: "Night Owl" describes *when* someone works, while
+  the others describe *how* they work.
+- One winning label hides mixed styles, e.g. someone who plans carefully but ships fast.
+
+### Ideas
+
+- [ ] **Fix the default-archetype bug first.** Derive the archetype at profile level from
+  episode scores, decisions and the LLM narrative, not from the per-session legacy scorer.
+- [ ] **Trait axes instead of one label.** Score a few independent axes, each with a
+  sentence of evidence:
+  - steering: director ↔ delegator
+  - planning: planner ↔ improviser
+  - quality: guardian ↔ shipper
+  - exploration: explorer ↔ executor
+  - communication: terse ↔ detailed
+
+  The character is a position on these axes: a primary and a secondary archetype, e.g.
+  "Architect with a Velocity streak".
+- [ ] **Bigger, defined archetype catalog.** 10–15 characters, each with explicit criteria
+  (which axes and signals, with thresholds), a description, typical strengths and typical
+  blind spots. Ground them in the 49-pattern decision catalog
+  (`assets/decision_catalog.json`). Candidates: Debugger, Researcher, Prototyper,
+  Refactorer, Product Thinker, Teacher.
+- [ ] **Separate habits from style.** Move time-of-day, model choice, go-to phrase and
+  prompt length into a "habits" strip, not the archetype.
+- [ ] **Evidence for every claim.** Each trait and archetype links to the sessions and
+  episodes behind it (redacted quotes or decision summaries) and shows a confidence level.
+- [ ] **Character over time.** Show how the character shifts month by month ("became more
+  of a planner since August"). This needs the dated aggregation from the merging section.
+- [ ] **Context-dependent characters.** A per-project or per-agent view, since one person can
+  be an Explorer in research repos and a Quality Guardian in production code.
+- [ ] **Stable labels.** Only change the headline archetype when the new one wins clearly
+  (hysteresis), so it doesn't flip with run-to-run LLM noise. Use the noise floor from the
+  research section.
+- [ ] **Tone.** Descriptive and growth-oriented, not judgmental. Each character gets a
+  "what to try next" line, not just a verdict.
+- [ ] **Shareable card.** A one-line summary plus the axes as an image or page section that
+  users can share; the demo site can show it.
+
 ## Also fixed during the refactor
 
 - [x] `openai_api_key` in `config.toml` (written by `init-config`) was ignored: aliased fields
