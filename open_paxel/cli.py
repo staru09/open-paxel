@@ -37,9 +37,11 @@ def _pipeline(settings: Settings) -> AnalysisPipeline:
 
 
 @app.command()
-def discover():
+def discover(
+    project_path: Path = typer.Option(None, "--path", help="Path to project directory")
+):
     """Show Claude Code sessions for the current project directory."""
-    repo = discover_repo_for_cwd()
+    repo = discover_repo_for_cwd(project_path)
     if not repo:
         console.print("[red]No Claude Code sessions found for this directory.[/red]")
         console.print("Run this command from your project root (where Claude Code stores sessions).")
@@ -110,10 +112,11 @@ def upload(
     force: bool = typer.Option(False, "--force"),
     dry_run: bool = typer.Option(False, "--dry-run"),
     yes: bool = typer.Option(False, "-y", "--yes", help="Skip confirmation"),
+    project_path: Path = typer.Option(None, "--path", help="Path to project directory"),
 ):
     """Analyze all sessions for the current project (CWD-only)."""
     settings = _settings(dry_run=dry_run)
-    repo_info = discover_repo_for_cwd()
+    repo_info = discover_repo_for_cwd(project_path)
     if not repo_info:
         console.print("[red]No Claude Code sessions found for this directory.[/red]")
         raise typer.Exit(1)
