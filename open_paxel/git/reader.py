@@ -7,8 +7,17 @@ from pathlib import Path
 from open_paxel.models.pipeline_models import GitCommit
 
 
+def find_git_root(path: Path) -> Path:
+    current = path
+    while current != current.parent:
+        if (current / ".git").exists():
+            return current
+        current = current.parent
+    return path
+
+
 def read_git_log(project_path: str | Path, *, limit: int = 500) -> list[GitCommit]:
-    path = Path(project_path)
+    path = find_git_root(Path(project_path))
     if not (path / ".git").exists():
         return []
     try:
